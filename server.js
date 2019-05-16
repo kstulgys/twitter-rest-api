@@ -15,6 +15,15 @@ const { createToken, verifyUser } = require("./utils/auth")
 
 // import { signup, signin, protect } from './utils/auth'
 
+function getClient(token, tokenSecret) {
+  return new Twitter({
+    consumer_key: process.env.TWITTER_CONSUMER_KEY,
+    consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+    access_token_key: token,
+    access_token_secret: tokenSecret
+  })
+}
+
 const app = express()
 
 app.use(
@@ -75,18 +84,43 @@ app.get(
 )
 
 app.post("/timeline", verifyUser, (req, res) => {
-  console.log("req.user", req.user)
-  var client = new Twitter({
-    consumer_key: process.env.TWITTER_CONSUMER_KEY,
-    consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-    access_token_key: req.user.token,
-    access_token_secret: req.user.tokenSecret
-  })
-
+  //   console.log("req.user", req.user)
+  const client = getClient(req.user.token, req.user.tokenSecret)
   //   var params = { screen_name: "nodejs" }
   client.get("statuses/user_timeline", function(error, tweets, response) {
     if (!error) {
-      console.log(tweets)
+      //   console.log(tweets)
+      res.json({ tweets })
+    }
+  })
+})
+
+app.post("/node", verifyUser, (req, res) => {
+  //   console.log("req.user", req.user)
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  var params = { screen_name: "nodejs" }
+  client.get("statuses/user_timeline", params, function(
+    error,
+    tweets,
+    response
+  ) {
+    if (!error) {
+      // console.log(tweets)
+      res.json({ tweets })
+    }
+  })
+})
+
+app.post("/search", verifyUser, (req, res) => {
+  //   console.log("req.user", req.user)
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  client.get("search/tweets", { q: req.body.query }, function(
+    error,
+    tweets,
+    response
+  ) {
+    if (!error) {
+      // console.log(tweets)
       res.json({ tweets })
     }
   })
