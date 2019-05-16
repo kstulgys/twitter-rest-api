@@ -20,20 +20,19 @@ module.exports.verifyToken = verifyToken = token =>
 module.exports.createToken = createToken = async ({
   token,
   tokenSecret,
-  username
+  id
 }) => {
-  if (!token || !tokenSecret || !username) {
+  if (!token || !tokenSecret || !id) {
     return res
       .status(400)
       .send({ message: "You need to have a Twitter account" })
   }
 
   try {
-    // const user = await User.create({ token, tokenSecret, email })
-    return await newToken({ token, tokenSecret, username })
+    return await newToken({ token, tokenSecret, id })
   } catch (e) {
-    // return res.status(500).end()
-    throw new Error("Could not generate a token")
+    return res.status(500).end()
+    // throw new Error("Could not generate a token")
   }
 }
 

@@ -47,20 +47,20 @@ passport.use(
       consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
       callbackURL: `${config.serverUrl}/auth/twitter/callback`
     },
-    async function(token, tokenSecret, profile, cb) {
-      const username = profile.username
-      const userToken = await createToken({ token, tokenSecret, username })
+    async function (token, tokenSecret, profile, cb) {
+      const id = profile.id
+      const userToken = await createToken({ token, tokenSecret, id })
       console.log("userToken", userToken)
       cb(null, { userToken })
     }
   )
 )
 
-passport.serializeUser(function(user, cb) {
+passport.serializeUser(function (user, cb) {
   cb(null, user)
 })
 
-passport.deserializeUser(function(obj, cb) {
+passport.deserializeUser(function (obj, cb) {
   cb(null, obj)
 })
 
@@ -84,47 +84,100 @@ app.get(
 )
 
 app.post("/timeline", verifyUser, (req, res) => {
-  //   console.log("req.user", req.user)
   const client = getClient(req.user.token, req.user.tokenSecret)
-  //   var params = { screen_name: "nodejs" }
-  client.get("statuses/user_timeline", function(error, tweets, response) {
-    if (!error) {
-      //   console.log(tweets)
-      res.json({ tweets })
-    }
-  })
-})
-
-app.post("/node", verifyUser, (req, res) => {
-  //   console.log("req.user", req.user)
-  const client = getClient(req.user.token, req.user.tokenSecret)
-  var params = { screen_name: "nodejs" }
-  client.get("statuses/user_timeline", params, function(
+  client.get("statuses/user_timeline", function (
     error,
     tweets,
     response
   ) {
-    if (!error) {
-      // console.log(tweets)
-      res.json({ tweets })
+    if (error) {
+      console.log(error)
     }
+    res.json({ tweets })
   })
 })
+
+app.post("/home", verifyUser, (req, res) => {
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  client.get("statuses/home_timeline", function (
+    error,
+    tweets,
+    response
+  ) {
+    if (error) {
+      console.log(error)
+    }
+    res.json({ tweets })
+  })
+})
+
+app.post("/user", verifyUser, (req, res) => {
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  var params = { user_id: req.user.id }
+  client.get("/users/show", params, function (
+    error,
+    user,
+    response
+  ) {
+    if (error) {
+      console.log(error)
+    }
+    res.json({ user })
+  })
+})
+
 
 app.post("/search", verifyUser, (req, res) => {
-  //   console.log("req.user", req.user)
   const client = getClient(req.user.token, req.user.tokenSecret)
-  client.get("search/tweets", { q: req.body.query }, function(
+  var params = { q: req.body.query, result_type: 'popular' }
+  client.get("search/tweets", params, function (
     error,
     tweets,
     response
   ) {
-    if (!error) {
-      // console.log(tweets)
-      res.json({ tweets })
+    if (error) {
+      console.log(error)
     }
+    res.json({ tweets })
   })
 })
+
+app.post("/update", verifyUser, (req, res) => {
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  var params = { status: req.body.update }
+  client.post('statuses/update', params, function (error, tweet, response) {
+    if (error) {
+      console.log(error)
+    }
+    res.json({ tweet })
+  });
+})
+
+app.post("/favorites", verifyUser, (req, res) => {
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  var params = { screen_name: req.body.name }
+  client.get('favorites/list', params, function (error, tweets, response) {
+    if (error) {
+      console.log(error)
+    }
+    console.log(tweets)
+    res.json({ tweets })
+  });
+})
+
+app.post("/favorite", verifyUser, (req, res) => {
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  var params = { id: req.body.id }
+  client.post('favorites/create', params, function (error, tweet, response) {
+    if (error) {
+      console.log(error)
+    }
+    console.log(tweet)
+    res.json({ tweet })
+  });
+})
+
+
 
 module.exports.start = async () => {
   try {
@@ -136,29 +189,3 @@ module.exports.start = async () => {
     console.error(e)
   }
 }
-
-// app.post('/signup', signup)
-// app.post('/signin', signin)
-
-// app.use('/api', protect)
-// app.use('/api/job', jobRouter)
-// app.use('/api/user', userRouter)
-
-// app.use('/api/item', itemRouter)
-// app.use('/api/list', listRouter)
-
-// app.use((req, res, next) => {
-//   const { userId } = req.session
-//   if (userId) {
-//     res.locals.user = USERS.find(user => user.id === userId)
-//   }
-//   next()
-// })
-// app.post('/signup', signup)
-// app.post('/signin', signin)
-// app.post('/signout', signout)
-// app.use('/favorite', favoriteRouter)
-
-// // FALLBACK
-// app.get('/*', (req, res) => res.redirect(WEBSITE));
-// const port = process.env.PORT || 3000
