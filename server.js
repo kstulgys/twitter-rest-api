@@ -10,35 +10,6 @@ const TwitterStrategy = require("passport-twitter").Strategy
 const { createToken, verifyUser } = require("./utils/auth")
 
 
-const app = express()
-app.use(passport.initialize())
-app.use(passport.session())
-app.use(cors())
-app.use(json())
-app.use(urlencoded({ extended: true }))
-app.use(morgan("dev"))
-
-
-// console.log(config)
-
-function getClient(token, tokenSecret) {
-  return new Twitter({
-    consumer_key: process.env.TWITTER_CONSUMER_KEY,
-    consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
-    access_token_key: token,
-    access_token_secret: tokenSecret
-  })
-}
-
-
-app.use(
-  require("express-session")({
-    secret: process.env.SECRET,
-    resave: true,
-    saveUninitialized: true
-  })
-)
-
 passport.use(
   new TwitterStrategy(
     {
@@ -62,6 +33,41 @@ passport.serializeUser(function (user, cb) {
 passport.deserializeUser(function (obj, cb) {
   cb(null, obj)
 })
+
+const app = express()
+
+app.use(cors())
+app.use(json())
+app.use(urlencoded({ extended: true }))
+app.use(morgan("dev"))
+
+app.use(
+  require("express-session")({
+    secret: process.env.SECRET,
+    resave: true,
+    saveUninitialized: true
+  })
+)
+app.use(passport.initialize())
+app.use(passport.session())
+
+// console.log(config)
+
+function getClient(token, tokenSecret) {
+  return new Twitter({
+    consumer_key: process.env.TWITTER_CONSUMER_KEY,
+    consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+    access_token_key: token,
+    access_token_secret: tokenSecret
+  })
+}
+
+
+
+
+
+
+
 
 app.get("/success", (req, res) => {
   res.redirect(`${config.clientUrl}/?token=${req.user.userToken}`)
