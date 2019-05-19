@@ -3,17 +3,11 @@ const express = require("express")
 const Twitter = require("twitter")
 const { json, urlencoded } = require("body-parser")
 const cors = require("cors")
-// const { connect } = require("./utils/db")
 const morgan = require("morgan")
 const config = require("./config")
 const passport = require("passport")
 const TwitterStrategy = require("passport-twitter").Strategy
 const { createToken, verifyUser } = require("./utils/auth")
-// const { User } = require("./resources/user/user.model")
-// import jobRouter from './resources/job/job.router'
-// import userRouter from './resources/user/user.router'
-
-// import { signup, signin, protect } from './utils/auth'
 
 function getClient(token, tokenSecret) {
   return new Twitter({
@@ -65,12 +59,11 @@ passport.deserializeUser(function (obj, cb) {
 })
 
 app.get("/success", (req, res) => {
-  //   console.log(req.user.userToken)
   res.redirect(`${config.clientUrl}/?token=${req.user.userToken}`)
 })
 
 app.get("/failure", (req, res) => {
-  res.redirect("https://1q33jn2pl3.codesandbox.io/")
+  res.redirect(config.clientUrl)
 })
 
 app.get("/auth/twitter", passport.authenticate("twitter"))
@@ -169,6 +162,18 @@ app.post("/favorite", verifyUser, (req, res) => {
   const client = getClient(req.user.token, req.user.tokenSecret)
   var params = { id: req.body.id }
   client.post('favorites/create', params, function (error, tweet, response) {
+    if (error) {
+      console.log(error)
+    }
+    console.log(tweet)
+    res.json({ tweet })
+  });
+})
+
+app.post("/unfavorite", verifyUser, (req, res) => {
+  const client = getClient(req.user.token, req.user.tokenSecret)
+  var params = { id: req.body.id }
+  client.post('favorites/destroy', params, function (error, tweet, response) {
     if (error) {
       console.log(error)
     }
