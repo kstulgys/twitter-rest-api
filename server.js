@@ -9,6 +9,18 @@ const passport = require("passport")
 const TwitterStrategy = require("passport-twitter").Strategy
 const { createToken, verifyUser } = require("./utils/auth")
 
+
+const app = express()
+app.use(passport.initialize())
+app.use(passport.session())
+app.use(cors())
+app.use(json())
+app.use(urlencoded({ extended: true }))
+app.use(morgan("dev"))
+
+
+// console.log(config)
+
 function getClient(token, tokenSecret) {
   return new Twitter({
     consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -18,7 +30,6 @@ function getClient(token, tokenSecret) {
   })
 }
 
-const app = express()
 
 app.use(
   require("express-session")({
@@ -27,12 +38,6 @@ app.use(
     saveUninitialized: true
   })
 )
-app.use(passport.initialize())
-app.use(passport.session())
-app.use(cors())
-app.use(json())
-app.use(urlencoded({ extended: true }))
-app.use(morgan("dev"))
 
 passport.use(
   new TwitterStrategy(
