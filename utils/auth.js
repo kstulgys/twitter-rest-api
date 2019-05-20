@@ -1,43 +1,34 @@
 const config = require("../config")
-const { User } = require("../resources/user/user.model")
 const jwt = require("jsonwebtoken")
-// import USERS from '../resources/data/users'
 
-module.exports.newToken = newToken = userData => {
+const newToken = userData => {
   return jwt.sign({ ...userData }, config.secrets.jwt, {
     expiresIn: config.secrets.jwtExp
   })
 }
 
-module.exports.verifyToken = verifyToken = token =>
-  new Promise((resolve, reject) => {
+const verifyToken = token => {
+  return new Promise((resolve, reject) => {
     jwt.verify(token, config.secrets.jwt, (err, payload) => {
       if (err) return reject(err)
       resolve(payload)
     })
   })
+}
 
-module.exports.createToken = createToken = async ({
-  token,
-  tokenSecret,
-  id
-}) => {
+const createToken = async ({ token, tokenSecret, id }) => {
   if (!token || !tokenSecret || !id) {
-    return res
-      .status(400)
-      .send({ message: "You need to have a Twitter account" })
+    throw new Error("invalid")
   }
 
   try {
     return await newToken({ token, tokenSecret, id })
   } catch (e) {
-    return res.status(500).end()
-    // throw new Error("Could not generate a token")
+    throw new Error(e.message)
   }
 }
 
-module.exports.verifyUser = async (req, res, next) => {
-  console.log("req.body", req.body)
+const verifyUser = async (req, res, next) => {
   const { authToken } = req.body
 
   if (!authToken) {
@@ -48,45 +39,17 @@ module.exports.verifyUser = async (req, res, next) => {
   try {
     payload = await verifyToken(authToken)
   } catch (e) {
+    console.log(e)
     return res.status(401).end()
   }
 
   req.user = payload
   next()
-
-  //   const user = await User.findById(payload.id)
-  //     .lean()
-  //     .exec()
-
-  //   if (!user) {
-  //     return res.status(401).end()
-  //   }
 }
 
-// export const protect = async (req, res, next) => {
-//   const bearer = req.headers.authorization
-
-//   if (!bearer || !bearer.startsWith("Bearer ")) {
-//     return res.status(401).end()
-//   }
-
-//   const token = bearer.split("Bearer ")[1].trim()
-//   let payload
-//   try {
-//     payload = await verifyToken(token)
-//   } catch (e) {
-//     return res.status(401).end()
-//   }
-
-//   const user = await User.findById(payload.id)
-//     .select("-password")
-//     .lean()
-//     .exec()
-
-//   if (!user) {
-//     return res.status(401).end()
-//   }
-
-//   req.user = user
-//   next()
-// }
+module.exports = {
+  verifyToken,
+  newToken,
+  createToken,
+  verifyUser
+}
