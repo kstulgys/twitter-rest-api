@@ -20,7 +20,7 @@ passport.use(
     async function (token, tokenSecret, profile, cb) {
       const id = profile.id
       const userToken = await createToken({ token, tokenSecret, id })
-      console.log("userToken", userToken)
+      // console.log("userToken", userToken)
       cb(null, { userToken })
     }
   )
@@ -69,13 +69,7 @@ function getClient(token, tokenSecret) {
 
 
 
-app.get("/success", (req, res) => {
-  res.redirect(`${config.clientUrl}/?token=${req.user.userToken}`)
-})
 
-app.get("/failure", (req, res) => {
-  res.redirect(config.clientUrl)
-})
 
 app.get("/auth/twitter", passport.authenticate("twitter"))
 
@@ -86,6 +80,15 @@ app.get(
     failureRedirect: "/failure"
   })
 )
+
+app.get("/success", (req, res) => {
+  res.redirect(`${config.clientUrl}/?token=${req.user.userToken}`)
+  // res.json({ token: req.user.userToken })
+})
+
+app.get("/failure", (req, res) => {
+  res.redirect(config.clientUrl)
+})
 
 app.post("/timeline", verifyUser, (req, res) => {
   const client = getClient(req.user.token, req.user.tokenSecret)
